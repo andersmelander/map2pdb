@@ -350,6 +350,11 @@ begin
         Logger.Info('PE filename not specified. Defaulting to %s', [TPath.GetFileName(PEFilename)]);
       end;
 
+      // Issue 18: PDB file isn't loaded unless the path stored in the EXE is a full path
+      // If the PDB filename is relative, make it absolute
+      if (TPath.IsRelativePath(TargetFilename)) then
+        TargetFilename := TPath.GetFullPath(TargetFilename);
+
       PatchPE(PEFilename, TargetFilename);
     end;
 
