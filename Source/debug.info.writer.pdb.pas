@@ -655,8 +655,12 @@ begin
 
   for var Segment in FDebugInfo.Segments do
   begin
+    // LLVM assigns a sequential number to the Frame field, starting from 1.
+    // It is unclear if we must use a unbroken sequential sequence but
+    // Issue 18 has shown that using Segment.Index only works if the segment
+    // enumerator returns segments in index order (which it does now).
 
-    SectionMapEntry.Frame := Segment.Index; // LLVM assigns a sequential number to this field, starting from 1
+    SectionMapEntry.Frame := Segment.Index;
     SectionMapEntry.Flags := CharacteristicsToSectionMapEntryFlags(Segment.Characteristics);
     SectionMapEntry.SectionLength := Segment.Size;
 
