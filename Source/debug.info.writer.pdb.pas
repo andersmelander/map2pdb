@@ -79,7 +79,7 @@ type
     TModuleLayoutList = TDictionary<TDebugInfoModule, TModuleLayout>;
 
     TNamedStreamEntry = record
-      Name: AnsiString;
+      Name: UTF8String;
       Stream: TMSFStream;
     end;
 
@@ -87,7 +87,7 @@ type
     private
       FReadOnly: boolean;
     public
-      function Add(const Name: AnsiString; Stream: TMSFStream): integer; overload;
+      function Add(const Name: UTF8String; Stream: TMSFStream): integer; overload;
       property ReadOnly: boolean read FReadOnly write FReadOnly;
     end;
 
@@ -163,7 +163,7 @@ begin
   Result := (Value and (Alignment - 1) = 0);
 end;
 
-function IsAsciiString(const S: AnsiString): boolean;
+function IsAsciiString(const S: UTF8String): boolean;
 begin
   for var c in S do
     if (Ord(c) >= $80) then
@@ -183,7 +183,7 @@ begin
   end;
 end;
 
-function GsiRecordCmp(const S1, S2: AnsiString): integer;
+function GsiRecordCmp(const S1, S2: UTF8String): integer;
 begin
   // Shorter strings always compare less than longer strings.
   Result := Length(S1) - Length(S2);
@@ -194,7 +194,7 @@ begin
       Result := MemCmp(pointer(S1), pointer(S2), Length(S1))
     else
       // Both strings are ascii, perform a case-insensitive comparison.
-      Result := System.AnsiStrings.CompareText(S1, S2);
+      Result := System.AnsiStrings.CompareText(AnsiString(S1), AnsiString(S2));
   end;
 end;
 
@@ -319,7 +319,7 @@ begin
 
     // Write the strings
     for var Index := 0 to FNamedStreams.Count-1 do
-      Result.Writer.Write(FNamedStreams[Index].Name); // Zero terminated string
+      Result.Writer.Write(AnsiString(FNamedStreams[Index].Name)); // Zero terminated string
 
     // Hash table:
     // +--------------------+-- +0
@@ -903,7 +903,7 @@ type
   TPublicSym32ex = record
     PublicSym32: TCVPublicSym32;
     Symbol: TDebugInfoSymbol;
-    Name: AnsiString;
+    Name: UTF8String;
     SymOffset: Cardinal;        // Offset of the symbol record in the publics stream.
 {$ifdef PDB_Minimal_Debug}
     BucketIndex: Cardinal;      // GSI hash table bucket index. The maximum value is IPHR_HASH_MINIMAL.
@@ -1333,7 +1333,7 @@ var
           Result := integer(SymA.PublicSym32.Offset) - integer(SymB.PublicSym32.Offset);
 
         if (Result = 0) then
-          Result := System.AnsiStrings.CompareStr(SymA.Name, SymB.Name);
+          Result := System.AnsiStrings.CompareStr(AnsiString(SymA.Name), AnsiString(SymB.Name));
       end));
 
 
@@ -1379,7 +1379,7 @@ var
         Publics[Index].PublicSym32.Flags := Ord(CVPubSymFlags.cvpsfFunction);
 
         Publics[Index].Symbol := Symbol;
-        Publics[Index].Name := AnsiString(Symbol.Name);
+        Publics[Index].Name := UTF8String(Symbol.Name);
 
         Inc(Index);
       end;
@@ -1712,7 +1712,7 @@ begin
   var Collisions := 0;
   for var Index := 0 to Strings.Count-1 do
   begin
-    var Filename := AnsiString(Strings[Index]);
+    var Filename := UTF8String(Strings[Index]);
 
     var Hash: Cardinal;
     if (StringTableHeader.HashVersion = 1) then
@@ -2156,7 +2156,7 @@ end;
 //      TDebugInfoPdbWriter.TNamedStreamList
 //
 // -----------------------------------------------------------------------------
-function TDebugInfoPdbWriter.TNamedStreamList.Add(const Name: AnsiString; Stream: TMSFStream): integer;
+function TDebugInfoPdbWriter.TNamedStreamList.Add(const Name: UTF8String; Stream: TMSFStream): integer;
 begin
   Assert(not ReadOnly);
 

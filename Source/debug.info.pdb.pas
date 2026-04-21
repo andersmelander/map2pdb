@@ -775,7 +775,7 @@ type
 //
 // Note: We do not perform truncation (modulus) on the result. It is up to the caller to do that.
 //
-function HashStringV1(const Str: AnsiString): Cardinal;
+function HashStringV1(const Str: UTF8String): Cardinal;
 
 
 //
@@ -787,13 +787,13 @@ function HashStringV1(const Str: AnsiString): Cardinal;
 //
 // Note: We do not perform truncation (modulus) on the result. It is up to the caller to do that.
 //
-function HashStringV2(const Str: AnsiString): Cardinal;
+function HashStringV2(const Str: UTF8String): Cardinal;
 
 
 implementation
 
 
-function HashStringV1(const Str: AnsiString): Cardinal;
+function HashStringV1(const Str: UTF8String): Cardinal;
 begin
   Result := 0;
 
@@ -826,7 +826,7 @@ begin
   Result := Result xor (Result shr 16);
 end;
 
-function HashStringV2(const Str: AnsiString): Cardinal;
+function HashStringV2(const Str: UTF8String): Cardinal;
 begin
   Result := $b170a1bf;
 
