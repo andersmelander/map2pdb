@@ -165,6 +165,9 @@ begin
     Fail('Passed without expected error: '+TPath.GetFileNameWithoutExtension(TestFileName));
 
   except
+    on E: ETestFailure do
+      raise; // otherwise the above Fail will be caught by the logic below and validated with Check(True)
+
     on E: Exception do
     begin
       var Msg := E.Message.ToLower;
