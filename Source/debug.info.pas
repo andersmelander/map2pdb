@@ -561,7 +561,7 @@ begin
     begin
       if (AOffset < Module.Offset) then
       begin
-        if (AOffset+ASize < Module.Offset) then
+        if (AOffset+ASize <= Module.Offset) then
           H := mid - 1
         else
           Exit(Module);
