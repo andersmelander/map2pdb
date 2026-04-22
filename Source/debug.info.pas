@@ -434,7 +434,7 @@ begin
     if (AOffset < Symbol.Offset) then
       H := mid - 1
     else
-    if (AOffset >= Symbol.Offset) then
+    if (AOffset > Symbol.Offset) then
       L := mid + 1
     else
     begin
