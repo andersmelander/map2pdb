@@ -303,6 +303,7 @@ begin
     end else
     begin
       FLineBuffer := FPeekBuffer;
+      FHasLineBuffer := True;
       FHasPeekBuffer := False;
       FPeekBuffer := '';
     end;
