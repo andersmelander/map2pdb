@@ -780,7 +780,7 @@ begin
       continue;
 
     if ((Offset >= Segment.Offset) and (Offset < Segment.Offset+Segment.Size)) or // Start is within other range
-      ((Offset+Size <= Segment.Offset) and (Offset+Size > Segment.Offset+Segment.Size)) or // Start is within other range
+      ((Offset+Size > Segment.Offset) and (Offset+Size <= Segment.Offset+Segment.Size)) or // End is within other range
       ((Offset <= Segment.Offset) and (Offset+Size > Segment.Offset)) then // Other is within range
       Exit(Segment);
   end;
