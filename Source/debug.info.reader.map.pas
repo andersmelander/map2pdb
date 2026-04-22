@@ -996,6 +996,15 @@ begin
       break;
     end;
 
+  // Allow trailing digits
+  if (Start <> Offset) then
+    while (Offset <= Length(Str)) do
+      case Str[Offset] of
+        '0'..'9': Inc(Offset);
+      else
+        break;
+      end;
+
   if (Start = Offset) then
     LineLogger.Error('Invalid segment name');
 
