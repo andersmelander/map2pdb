@@ -133,7 +133,7 @@ begin
     var n2 := n;
     var LastDot := -1;
 
-    while (n2 <= Result.Length) and ((Result[n2] = '.') or (Result[n2].IsLetter)) do
+    while (n2 <= Result.Length) and ((Result[n2] = '.') or (Result[n2] = '_') or (Result[n2].IsLetterOrDigit)) do
     begin
       if (Result[n2] = '.') then
         LastDot := n2;
