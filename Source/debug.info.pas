@@ -481,7 +481,15 @@ begin
     begin
       Result := integer(Left.Segment.Index) - integer(Right.Segment.Index);
       if (Result = 0) then
-        Result := integer(Left.Offset) - integer(Right.Offset); // Cast to avoid integer overflow
+      begin
+        if (Left.Offset < Right.Offset) then
+          Result := -1
+        else
+        if (Left.Offset > Right.Offset) then
+          Result := 1
+        else
+          Result := 0;
+      end;
     end);
 end;
 
@@ -898,13 +906,27 @@ begin
   FComparer := IComparer<TDebugInfoSourceLine>(
     function(const Left, Right: TDebugInfoSourceLine): integer
     begin
-      Result := NativeInt(Left.SourceFile)-NativeInt(Right.SourceFile);
+      if (NativeUInt(Left.SourceFile) < NativeUInt(Right.SourceFile)) then
+        Result := -1
+      else
+      if (NativeUInt(Left.SourceFile) > NativeUInt(Right.SourceFile)) then
+        Result := 1
+      else
+        Result := 0;
 
       if (Result = 0) then
         Result := Left.LineNumber - Right.LineNumber;
 
       if (Result = 0) then
-        Result := integer(Left.Offset) - integer(Right.Offset);
+      begin
+        if (Left.Offset < Right.Offset) then
+          Result := -1
+        else
+        if (Left.Offset > Right.Offset) then
+          Result := 1
+        else
+          Result := 0;
+      end;
     end);
 end;
 
