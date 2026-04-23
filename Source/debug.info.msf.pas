@@ -853,13 +853,11 @@ begin
 end;
 
 procedure TBinaryBlockWriter.WriteBuffer(const Buffer; Count: NativeInt);
-type
-  TByteArray = array[0..MaxInt-1] of Byte;
-  PByteArray = ^TByteArray;
 begin
   // Find start interval of this piece of data.
   // Disregard the first block so intervals start with the two FPM blocks
   var Interval := (FStream.Position - FBlockSize) div FIntervalSize;
+  var Source: PByte := @Buffer;
 
   while (Count > 0) do
   begin
@@ -869,7 +867,8 @@ begin
     BytesInThisInterval := Min(Count, BytesInThisInterval);
 
     // Write part
-    FStream.WriteBuffer(Buffer, BytesInThisInterval);
+    FStream.WriteBuffer(Source^, BytesInThisInterval);
+    Inc(Source, BytesInThisInterval);
     Dec(Count, BytesInThisInterval);
 
     // More to write or end of interval?
