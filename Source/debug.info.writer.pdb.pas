@@ -1878,14 +1878,17 @@ begin
             // and get the next symbol offset.
             while (SourceLine.Offset >= NextSymbolOffset) do
             begin
+              SourceFile := nil; // Trigger a new group
+
               if (SymbolOffsetIndex < SymbolOffsets.Count) then
               begin
                 NextSymbolOffset := SymbolOffsets[SymbolOffsetIndex];
                 Inc(SymbolOffsetIndex);
               end else
+              begin
                 NextSymbolOffset := High(TDebugInfoOffset);
-
-              SourceFile := nil; // Trigger a new group
+                break; // Because, in theory, SourceLine.Offset can be High(TDebugInfoOffset) in which case we would have an endless loop
+              end;
             end;
 
             // Start a new group
