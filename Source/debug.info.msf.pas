@@ -1012,30 +1012,26 @@ begin
     var NewInterval := (NewPosition - FBlockSize) div FIntervalSize;
     Assert(OldInterval <= NewInterval);
 
-    if (OldInterval <> NewInterval) then
+    // NewInterval /should/ generally be OldInterval+1 but just in case we for
+    // some reason expand more than one interval then we handle the general
+    // case by iteratively expanding one interval at a time.
+
+    while (OldInterval < NewInterval) do
     begin
-      Assert(OldInterval = NewInterval-1);
+      Inc(OldInterval);
 
       // Move up to the start of the FPMs in the next interval
-      var StartOfInterval := NewInterval * FIntervalSize + FBlockSize;
-//      Dec(NewPosition, StartOfInterval - FStream.Position);
-//      Assert(NewPosition >= 0);
-      FStream.Position := StartOfInterval;
+      FStream.Position := OldInterval * FIntervalSize + FBlockSize;
 
       // Write the two FPM blocks
       WriteBlockMap;
       WriteBlockMap;
+    end;
 
-      // Seek into the new interval. Adjust for the two FPMs just written.
-//      Dec(NewPosition, 2 * FBlockSize);
-//      Assert(NewPosition >= 0);
-//      FStream.Seek(NewPosition, soCurrent);
-      FStream.Position := NewPosition;
-      Assert(PhysicalToLogicalOffset(FStream.Position) = Value);
-    end else
-      FStream.Position := NewPosition;
-  end else
-    FStream.Position := NewPosition;
+    Assert(PhysicalToLogicalOffset(NewPosition) = Value);
+  end;
+
+  FStream.Position := NewPosition;
   FStreamSize := Max(FStreamSize, FStream.Position);
 end;
 
