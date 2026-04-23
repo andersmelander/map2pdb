@@ -50,6 +50,7 @@ uses
   Windows,
   SysUtils,
   IOUtils,
+  System.Character,
   debug.info.reader.map,
   debug.info.reader.test,
   debug.info.reader.jdbg;
@@ -173,7 +174,13 @@ begin
       var Msg := E.Message.ToLower;
       Msg := StringReplace(Msg, '/', '-', [rfReplaceAll]);
       Msg := StringReplace(Msg, '"', '', [rfReplaceAll]);
-      if (Msg.Contains(TPath.GetFileNameWithoutExtension(TestFileName).ToLower)) then
+
+      // Allow multiple test cases with same error by postfixing the filename with a number
+      var ExpectedError := TestFileName;
+      while (ExpectedError[Length(ExpectedError)].IsDigit) do
+        SetLength(ExpectedError, Length(ExpectedError)-1);
+
+      if (Msg.Contains(TPath.GetFileNameWithoutExtension(ExpectedError).ToLower)) then
         Check(True)
       else
         raise;
