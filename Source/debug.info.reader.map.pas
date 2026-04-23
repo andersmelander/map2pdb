@@ -550,10 +550,11 @@ begin
           ModulePos := n2;
           Dec(n2);
         end;
-        StartOfName := ModulePos;
 
-        var IsPath := CharInSet(Reader.LineBuffer[n2], ['\', '/']);
-        var FilenameIsAlias := (Reader.LineBuffer[n2] = '|');
+        var IsPath := (n2 >= StartOfName) and CharInSet(Reader.LineBuffer[n2], ['\', '/']);
+        var FilenameIsAlias := (n2 >= StartOfName) and (Reader.LineBuffer[n2] = '|');
+
+        StartOfName := ModulePos;
 
         var ModuleName := Copy(Reader.LineBuffer, StartOfName, EndOfName-StartOfName+1);
 
