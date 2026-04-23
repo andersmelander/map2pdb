@@ -1,0 +1,12 @@
+ Start         Length     Name                   Class
+ 0001:00001000 00001000H .text                  CODE
+
+Detailed map of segments
+ 0001:00000000 00001000 C=CODE     S=.text    G=(none)   M=Unit1    ACBP=A9
+
+  Address             Publics by Name
+ 0001:00001000       SymbolName
+
+  Address             Publics by Value
+
+Line numbers for Unit1 Unit1.pas) segment .text

@@ -44,6 +44,21 @@ type
     procedure ProcessFolder(Suite: ITestSuite; TestClass: TFileTestCaseClass; const NameOfMethod, Path, FileMask: string; Recursive: Boolean); override;
   end;
 
+type
+  TTestFileReaderWriter = class(TCustomMapTest)
+  private
+    class constructor Create;
+  private class var
+    FDumper: string;
+    FHasDumper: boolean;
+  protected
+    procedure ProcessDebugInfo(DebugInfo: TDebugInfo); override;
+  public
+    constructor Create(const AMethodName, ATestFileName: string); override;
+  published
+    procedure TestCVDUMP;
+  end;
+
 implementation
 
 uses
@@ -53,7 +68,8 @@ uses
   System.Character,
   debug.info.reader.map,
   debug.info.reader.test,
-  debug.info.reader.jdbg;
+  debug.info.reader.jdbg,
+  debug.info.writer.pdb;
 
 type
   TInputFormat = (ifMap, ifJdbg, ifTest);
@@ -128,6 +144,115 @@ begin
 end;
 
 
+constructor TTestFileReaderWriter.Create(const AMethodName, ATestFileName: string);
+begin
+  inherited;
+
+end;
+
+class constructor TTestFileReaderWriter.Create;
+begin
+  var RelativePath := 'Tools\cvdump.exe';
+  FDumper := TPath.GetFullPath(RelativePath);
+
+  while (not TFile.Exists(FDumper)) do
+  begin
+    var LastAbsolutePath := FDumper;
+    RelativePath := TPath.Combine('..', RelativePath);
+    FDumper := TPath.GetFullPath(RelativePath);
+
+    if (FDumper = LastAbsolutePath) then
+      break; // We're at the root
+  end;
+
+  FHasDumper := TFile.Exists(FDumper);
+end;
+
+procedure TTestFileReaderWriter.ProcessDebugInfo(DebugInfo: TDebugInfo);
+
+  function ExecAndWait(const ExePath: string; Params: TArray<string>; WorkDir: string = ''; TimeoutMS: DWORD = INFINITE): DWORD;
+  var
+    SI: TStartupInfoW;
+    PI: TProcessInformation;
+    CmdLine: string;
+    WaitRes: DWORD;
+    ExitCode: DWORD;
+  begin
+    Result := DWORD($FFFFFFFF);
+
+    CmdLine := '"' + ExePath + '"';
+    if Params <> nil then
+      for var Param in Params do
+        CmdLine := CmdLine + ' ' + Param;
+
+    SI := Default(TStartupInfoW);
+    SI.cb := SizeOf(SI);
+
+    PI := Default(TProcessInformation);
+    try
+
+      if not CreateProcessW(nil, PChar(CmdLine), nil, nil, False, 0, nil, PChar(WorkDir), SI, PI) then
+        raise Exception.CreateFmt('CreateProcess failed, error=%d', [GetLastError]);
+
+      WaitRes := WaitForSingleObject(PI.hProcess, TimeoutMS);
+      case WaitRes of
+
+        WAIT_OBJECT_0:
+          begin
+            if not GetExitCodeProcess(PI.hProcess, ExitCode) then
+              raise Exception.CreateFmt('GetExitCodeProcess failed, error=%d', [GetLastError]);
+            Result := ExitCode;
+          end;
+
+        WAIT_TIMEOUT:
+          raise Exception.Create('Process timed out');
+
+      else
+        raise Exception.CreateFmt('WaitForSingleObject failed, error=%d', [GetLastError]);
+
+      end;
+    finally
+      CloseHandle(PI.hThread);
+      CloseHandle(PI.hProcess);
+    end;
+  end;
+
+begin
+  inherited;
+
+  var BlockSize: Integer := 0;
+
+  var TargetFilename := TPath.ChangeExtension(TestFileName, '.pdb');
+  try
+
+    var Writer := TDebugInfoPdbWriter.Create(BlockSize);
+    try
+
+      Writer.SaveToFile(TargetFilename, DebugInfo);
+
+    finally
+      Writer.Free;
+    end;
+
+    // cvdump.exe -x -headers -m -p <pdb file>
+    var Res := ExecAndWait(FDumper, ['-x', '-m', '-p', '"'+TPath.GetFileName(TargetFilename)+'"'], TPath.GetDirectoryName(TargetFilename));
+    CheckEquals(0, Res);
+
+  finally
+    TFile.Delete(TargetFilename);
+  end;
+
+end;
+
+procedure TTestFileReaderWriter.TestCVDUMP;
+begin
+  if FHasDumper then
+    DoLoadFromFile
+  else
+    Check(True);
+end;
+
+
 { TFolderTestSuiteSkipErrors }
 
 procedure TFolderTestSuiteSkipErrors.ProcessFolder(Suite: ITestSuite; TestClass: TFileTestCaseClass; const NameOfMethod, Path,
@@ -191,8 +316,13 @@ end;
 initialization
   var TestSuite: TTestSuite := TFolderTestSuiteSkipErrors.Create('Load map files', TTestFileReader, '..\..\..\Data', '*.*', True);
   RegisterTest(TestSuite);
+
   TestSuite := TFolderTestSuiteOnlyErrors.Create('Reader errors', TTestFileReaderErrors, '..\..\..\Data', '*.*', True);
   RegisterTest(TestSuite);
+
+  TestSuite := TFolderTestSuiteSkipErrors.Create('Validate produced PDB files', TTestFileReaderWriter, '..\..\..\Data', '*.*', True);
+  RegisterTest(TestSuite);
+
 end.
 
 
