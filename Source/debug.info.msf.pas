@@ -78,6 +78,7 @@ type
     // Writes strings as zero terminated ansi strings. Does not write the length byte/word
     procedure Write(const Str: string); overload;
     procedure Write(const Str: AnsiString); overload;
+    procedure Write(const Str: UTF8String); overload;
     // Write a record (or any other typed value)
     procedure Write<T>(const Value: T); overload;
     // Write a dynamic array
@@ -837,11 +838,7 @@ end;
 
 procedure TBinaryBlockWriter.Write(const Str: string);
 begin
-  // TODO : Handle UTF8 here
-  if (Str <> '') then
-    Write(AnsiString(Str))
-  else
-    Write(Byte(0));
+  Write(UTF8String(Str));
 end;
 
 procedure TBinaryBlockWriter.Write(const Str: AnsiString);
@@ -850,6 +847,11 @@ begin
     WriteBuffer(Str[1], Length(Str)+1) // Include terminating zero
   else
     Write(Byte(0));
+end;
+
+procedure TBinaryBlockWriter.Write(const Str: UTF8String);
+begin
+  Write(AnsiString(Str));
 end;
 
 procedure TBinaryBlockWriter.WriteBuffer(const Buffer; Count: NativeInt);

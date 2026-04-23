@@ -78,6 +78,7 @@ uses
   System.SysUtils,
   System.IOUtils,
   System.Math,
+  System.Character,
   Winapi.Windows;
 
 // -----------------------------------------------------------------------------
@@ -131,7 +132,8 @@ begin
     // Find last '.'
     var n2 := n;
     var LastDot := -1;
-    while (n2 <= Result.Length) and (Ord(Result[n2]) <= 255) and (AnsiChar(Result[n2]) in ['a'..'z', 'A'..'Z', '.']) do
+
+    while (n2 <= Result.Length) and ((Result[n2] = '.') or (Result[n2] = '_') or (Result[n2].IsLetterOrDigit)) do
     begin
       if (Result[n2] = '.') then
         LastDot := n2;

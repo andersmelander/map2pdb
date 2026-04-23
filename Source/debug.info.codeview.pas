@@ -403,8 +403,8 @@ type
     Data: TBytes;
   public
     function Length: Byte; // Total size - not same as Header.RecordLen
-    function Name: AnsiString; overload;
-    class function Name(AKind: CVSymbolRecordKind): AnsiString; overload; static;
+    function Name: UTF8String; overload;
+    class function Name(AKind: CVSymbolRecordKind): UTF8String; overload; static;
   end;
 
 
@@ -539,9 +539,9 @@ type
     Name: AnsiString;           // Zero terminated name
     }
   private
-    function GetName: AnsiString;
+    function GetName: UTF8String;
   public
-    property Name: AnsiString read GetName;
+    property Name: UTF8String read GetName;
   end;
 
   //
@@ -774,7 +774,7 @@ const
   // The array must be ordered by value since we're doing a binary search on it.
   SymbolTypeNames: array[0..195] of record
     Value: CVSymbolRecordKind;
-    Name: AnsiString;
+    Name: UTF8String;
   end = (
     (Value: CVSymbolRecordKind.S_COMPILE;             Name: 'S_COMPILE'),
     (Value: CVSymbolRecordKind.S_REGISTER_16t;        Name: 'S_REGISTER_16t'),
@@ -984,7 +984,7 @@ var
   CachedSymbolKind: CVSymbolRecordKind;
   CachedNameIndex: integer = -1;
 
-class function TCVSymbol.Name(AKind: CVSymbolRecordKind): AnsiString;
+class function TCVSymbol.Name(AKind: CVSymbolRecordKind): UTF8String;
 begin
   // Well, this sucks!
   // E2134 Type 'TCVSymbolRecordKind' has no type info
@@ -1019,14 +1019,14 @@ begin
   Assert(False, 'Failed to find TCVSymbol.Name');
 end;
 
-function TCVSymbol.Name: AnsiString;
+function TCVSymbol.Name: UTF8String;
 begin
   Result := TCVSymbol.Name(CVSymbolRecordKind(Header.RecordKind));
 end;
 
 { TPublicSym32 }
 
-function TCVPublicSym32.GetName: AnsiString;
+function TCVPublicSym32.GetName: UTF8String;
 begin
   // Note: string is length prefixed so we skip that with +SizeOf(Word)
   // No it's not. Maybe in an older version of PDB ist was.
