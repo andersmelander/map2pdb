@@ -1093,7 +1093,15 @@ begin
         // This comparison is necessary to make the sorting stable in the presence
         // of two static globals with the same name.
         if (Result = 0) then
-          Result :=  integer(L.SymOffset) - integer(R.SymOffset);
+        begin
+          if (L.SymOffset < R.SymOffset) then
+            Result := -1
+          else
+          if (L.SymOffset > R.SymOffset) then
+            Result := 1
+          else
+            Result := 0;
+        end;
       end);
 
     var ChainCount := 0;
@@ -1329,7 +1337,15 @@ var
         Result := integer(SymA.PublicSym32.Segment) - integer(SymB.PublicSym32.Segment);
 
         if (Result = 0) then
-          Result := integer(SymA.PublicSym32.Offset) - integer(SymB.PublicSym32.Offset);
+        begin
+          if (SymA.PublicSym32.Offset < SymB.PublicSym32.Offset) then
+            Result := -1
+          else
+          if (SymA.PublicSym32.Offset > SymB.PublicSym32.Offset) then
+            Result := 1
+          else
+            Result := 0;
+        end;
 
         if (Result = 0) then
           Result := System.AnsiStrings.CompareStr(SymA.Name, SymB.Name);
@@ -1827,7 +1843,13 @@ begin
       Lines.Sort(IComparer<TDebugInfoSourceLine>(
         function(const A, B: TDebugInfoSourceLine): integer
         begin
-          Result := integer(A.Offset) - integer(B.Offset);
+          if (A.Offset < B.Offset) then
+            Result := -1
+          else
+          if (A.Offset > B.Offset) then
+            Result := 1
+          else
+            Result := 0;
 
           // Duplicate offets can exist
         end));
@@ -1887,7 +1909,13 @@ begin
         var GroupComparer: IComparer<TDebugInfoSourceLine> := IComparer<TDebugInfoSourceLine>(
           function(const A, B: TDebugInfoSourceLine): integer
           begin
-            Result := integer(A.Offset) - integer(B.Offset);
+            if (A.Offset < B.Offset) then
+              Result := -1
+            else
+            if (A.Offset > B.Offset) then
+              Result := 1
+            else
+              Result := 0;
           end);
 
         for var Group in SourceGroups do
