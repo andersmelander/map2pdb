@@ -539,7 +539,6 @@ begin
     var ModuleLayout := FModuleLayout[Module];
 
     var ModInfo := Default(TModInfo);
-    ModInfo := Default(TModInfo);
     PopulateDBISectionContribution(ModInfo.SectionContrib, Module);
     ModInfo.SectionContrib.ModuleIndex := ModuleIndex;
 
