@@ -1,0 +1,9 @@
+Start         Length     Name                   Class
+ 0001:00001000 00001000H .text                  CODE
+ 0002:00002000 00001000H .text2                 CODE
+ 0003:00003000 00001000H .text3                 CODE
+
+Detailed map of segments
+ 0001:00000000 00001000 C=CODE     S=.text    G=(none)   M=Unit1\   ACBP=A9
+ 0002:00000000 00001000 C=CODE     S=.text2   G=(none)   M=Unit2    ACBP=A9
+ 0003:00000000 00001000 C=CODE     S=.text3   G=(none)   M=Unit2    ACBP=A9
