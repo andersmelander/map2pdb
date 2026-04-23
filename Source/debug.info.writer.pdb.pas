@@ -1858,7 +1858,7 @@ begin
       var SourceGroups := TObjectList<TSourceLineList>.Create(True);
       try
 
-        var SymbolOffsets := TList<Cardinal>.Create;
+        var SymbolOffsets := TList<TDebugInfoOffset>.Create;
         try
           // Apparently each symbol within the module must be at the start of a group.
           // Collect a list of all symbol offsets for the module.
@@ -1868,7 +1868,7 @@ begin
 
           var SourceFile: TDebugInfoSourceFile := nil;
           var Group: TSourceLineList := nil;
-          var NextSymbolOffset: Cardinal := 0;
+          var NextSymbolOffset: TDebugInfoOffset := 0;
           var SymbolOffsetIndex := 0;
 
           // Group lines by source file
@@ -1883,7 +1883,7 @@ begin
                 NextSymbolOffset := SymbolOffsets[SymbolOffsetIndex];
                 Inc(SymbolOffsetIndex);
               end else
-                NextSymbolOffset := MaxInt;
+                NextSymbolOffset := High(TDebugInfoOffset);
 
               SourceFile := nil; // Trigger a new group
             end;
