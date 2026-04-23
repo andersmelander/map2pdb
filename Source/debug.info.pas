@@ -892,7 +892,7 @@ begin
   if (not FSourceLines.BinarySearch(Result, Index, FComparer)) then
     FSourceLines.Insert(Index, Result)
   else
-    Result.Free;
+    FreeAndNil(Result); // Duplicate
 end;
 
 constructor TDebugInfoSourceLines.Create(AModule: TDebugInfoModule);
