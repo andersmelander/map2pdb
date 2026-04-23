@@ -539,7 +539,6 @@ begin
     var ModuleLayout := FModuleLayout[Module];
 
     var ModInfo := Default(TModInfo);
-    ModInfo := Default(TModInfo);
     PopulateDBISectionContribution(ModInfo.SectionContrib, Module);
     ModInfo.SectionContrib.ModuleIndex := ModuleIndex;
 
@@ -1094,7 +1093,15 @@ begin
         // This comparison is necessary to make the sorting stable in the presence
         // of two static globals with the same name.
         if (Result = 0) then
-          Result :=  integer(L.SymOffset) - integer(R.SymOffset);
+        begin
+          if (L.SymOffset < R.SymOffset) then
+            Result := -1
+          else
+          if (L.SymOffset > R.SymOffset) then
+            Result := 1
+          else
+            Result := 0;
+        end;
       end);
 
     var ChainCount := 0;
@@ -1330,7 +1337,15 @@ var
         Result := integer(SymA.PublicSym32.Segment) - integer(SymB.PublicSym32.Segment);
 
         if (Result = 0) then
-          Result := integer(SymA.PublicSym32.Offset) - integer(SymB.PublicSym32.Offset);
+        begin
+          if (SymA.PublicSym32.Offset < SymB.PublicSym32.Offset) then
+            Result := -1
+          else
+          if (SymA.PublicSym32.Offset > SymB.PublicSym32.Offset) then
+            Result := 1
+          else
+            Result := 0;
+        end;
 
         if (Result = 0) then
           Result := System.AnsiStrings.CompareStr(SymA.Name, SymB.Name);
@@ -1828,7 +1843,13 @@ begin
       Lines.Sort(IComparer<TDebugInfoSourceLine>(
         function(const A, B: TDebugInfoSourceLine): integer
         begin
-          Result := integer(A.Offset) - integer(B.Offset);
+          if (A.Offset < B.Offset) then
+            Result := -1
+          else
+          if (A.Offset > B.Offset) then
+            Result := 1
+          else
+            Result := 0;
 
           // Duplicate offets can exist
         end));
@@ -1837,7 +1858,7 @@ begin
       var SourceGroups := TObjectList<TSourceLineList>.Create(True);
       try
 
-        var SymbolOffsets := TList<Cardinal>.Create;
+        var SymbolOffsets := TList<TDebugInfoOffset>.Create;
         try
           // Apparently each symbol within the module must be at the start of a group.
           // Collect a list of all symbol offsets for the module.
@@ -1847,7 +1868,7 @@ begin
 
           var SourceFile: TDebugInfoSourceFile := nil;
           var Group: TSourceLineList := nil;
-          var NextSymbolOffset: Cardinal := 0;
+          var NextSymbolOffset: TDebugInfoOffset := 0;
           var SymbolOffsetIndex := 0;
 
           // Group lines by source file
@@ -1857,14 +1878,17 @@ begin
             // and get the next symbol offset.
             while (SourceLine.Offset >= NextSymbolOffset) do
             begin
+              SourceFile := nil; // Trigger a new group
+
               if (SymbolOffsetIndex < SymbolOffsets.Count) then
               begin
                 NextSymbolOffset := SymbolOffsets[SymbolOffsetIndex];
                 Inc(SymbolOffsetIndex);
               end else
-                NextSymbolOffset := MaxInt;
-
-              SourceFile := nil; // Trigger a new group
+              begin
+                NextSymbolOffset := High(TDebugInfoOffset);
+                break; // Because, in theory, SourceLine.Offset can be High(TDebugInfoOffset) in which case we would have an endless loop
+              end;
             end;
 
             // Start a new group
@@ -1888,7 +1912,13 @@ begin
         var GroupComparer: IComparer<TDebugInfoSourceLine> := IComparer<TDebugInfoSourceLine>(
           function(const A, B: TDebugInfoSourceLine): integer
           begin
-            Result := integer(A.Offset) - integer(B.Offset);
+            if (A.Offset < B.Offset) then
+              Result := -1
+            else
+            if (A.Offset > B.Offset) then
+              Result := 1
+            else
+              Result := 0;
           end);
 
         for var Group in SourceGroups do

@@ -434,7 +434,7 @@ begin
     if (AOffset < Symbol.Offset) then
       H := mid - 1
     else
-    if (AOffset >= Symbol.Offset) then
+    if (AOffset > Symbol.Offset) then
       L := mid + 1
     else
     begin
@@ -481,7 +481,15 @@ begin
     begin
       Result := integer(Left.Segment.Index) - integer(Right.Segment.Index);
       if (Result = 0) then
-        Result := integer(Left.Offset) - integer(Right.Offset); // Cast to avoid integer overflow
+      begin
+        if (Left.Offset < Right.Offset) then
+          Result := -1
+        else
+        if (Left.Offset > Right.Offset) then
+          Result := 1
+        else
+          Result := 0;
+      end;
     end);
 end;
 
@@ -553,7 +561,7 @@ begin
     begin
       if (AOffset < Module.Offset) then
       begin
-        if (AOffset+ASize < Module.Offset) then
+        if (AOffset+ASize <= Module.Offset) then
           H := mid - 1
         else
           Exit(Module);
@@ -772,7 +780,7 @@ begin
       continue;
 
     if ((Offset >= Segment.Offset) and (Offset < Segment.Offset+Segment.Size)) or // Start is within other range
-      ((Offset+Size <= Segment.Offset) and (Offset+Size > Segment.Offset+Segment.Size)) or // Start is within other range
+      ((Offset+Size > Segment.Offset) and (Offset+Size <= Segment.Offset+Segment.Size)) or // End is within other range
       ((Offset <= Segment.Offset) and (Offset+Size > Segment.Offset)) then // Other is within range
       Exit(Segment);
   end;
@@ -884,7 +892,7 @@ begin
   if (not FSourceLines.BinarySearch(Result, Index, FComparer)) then
     FSourceLines.Insert(Index, Result)
   else
-    Result.Free;
+    FreeAndNil(Result); // Duplicate
 end;
 
 constructor TDebugInfoSourceLines.Create(AModule: TDebugInfoModule);
@@ -898,13 +906,27 @@ begin
   FComparer := IComparer<TDebugInfoSourceLine>(
     function(const Left, Right: TDebugInfoSourceLine): integer
     begin
-      Result := NativeInt(Left.SourceFile)-NativeInt(Right.SourceFile);
+      if (NativeUInt(Left.SourceFile) < NativeUInt(Right.SourceFile)) then
+        Result := -1
+      else
+      if (NativeUInt(Left.SourceFile) > NativeUInt(Right.SourceFile)) then
+        Result := 1
+      else
+        Result := 0;
 
       if (Result = 0) then
         Result := Left.LineNumber - Right.LineNumber;
 
       if (Result = 0) then
-        Result := integer(Left.Offset) - integer(Right.Offset);
+      begin
+        if (Left.Offset < Right.Offset) then
+          Result := -1
+        else
+        if (Left.Offset > Right.Offset) then
+          Result := 1
+        else
+          Result := 0;
+      end;
     end);
 end;
 

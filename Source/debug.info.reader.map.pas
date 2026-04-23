@@ -303,6 +303,7 @@ begin
     end else
     begin
       FLineBuffer := FPeekBuffer;
+      FHasLineBuffer := True;
       FHasPeekBuffer := False;
       FPeekBuffer := '';
     end;
@@ -549,10 +550,11 @@ begin
           ModulePos := n2;
           Dec(n2);
         end;
-        StartOfName := ModulePos;
 
-        var IsPath := CharInSet(Reader.LineBuffer[n2], ['\', '/']);
-        var FilenameIsAlias := (Reader.LineBuffer[n2] = '|');
+        var IsPath := (n2 >= StartOfName) and CharInSet(Reader.LineBuffer[n2], ['\', '/']);
+        var FilenameIsAlias := (n2 >= StartOfName) and (Reader.LineBuffer[n2] = '|');
+
+        StartOfName := ModulePos;
 
         var ModuleName := Copy(Reader.LineBuffer, StartOfName, EndOfName-StartOfName+1);
 
@@ -591,10 +593,13 @@ begin
         if (Module <> nil) then
         begin
           LineLogger.Warning('Modules overlap: %s, %s'#13#10'%s', [ModuleName, Module.Name, Reader.LineBuffer]);
-          var Overlap := Module.Offset + Module.Size - Offset;
-          if (Overlap > 0) then
+
+          if (Module.Offset + Module.Size > Offset) and (Module.Offset <= Offset) then
           begin
-            // Existing module extends into this one. Move this one.
+
+            // Existing module starts before or at this one and extends into this one. Move this one.
+            var Overlap := Module.Offset + Module.Size - Offset;
+
             if (Size <= Overlap) then
             begin
               LineLogger.Warning('Unable to recover by moving module as module is too small. Module ignored: %s', [ModuleName]);
@@ -605,18 +610,23 @@ begin
               Offset := Offset + Overlap;
               Size := Size - Overlap;
             end;
+
           end else
           begin
-            // This module extends into existing module. Shrink this one.
-            if (Size <= -Overlap) then
+
+            // This module starts before existing module and extends into it. Shrink this one.
+            var Overlap := Offset + Size - Module.Offset;
+
+            if (Size <= Overlap) then
             begin
               LineLogger.Warning('Unable to recover by moving module as module is too small. Module ignored: %s', [ModuleName]);
               Size := 0;
             end else
             begin
-              LineLogger.Warning('Recovered by shrinking module %d bytes', [-Overlap]);
-              Size := Size + Overlap;
+              LineLogger.Warning('Recovered by shrinking module %d bytes', [Overlap]);
+              Size := Size - Overlap;
             end;
+
           end;
 
           // If new module still overlap something we give up on it
@@ -994,6 +1004,15 @@ begin
     else
       break;
     end;
+
+  // Allow trailing digits
+  if (Start <> Offset) then
+    while (Offset <= Length(Str)) do
+      case Str[Offset] of
+        '0'..'9': Inc(Offset);
+      else
+        break;
+      end;
 
   if (Start = Offset) then
     LineLogger.Error('Invalid segment name');
