@@ -19,16 +19,6 @@ uses
   debug.info.log;
 
 type
-
-  {$IF CompilerVersion < 35.0)}
-  TNoRefCountObject = class(TObject, IInterface)
-  protected
-    function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
-    function _AddRef: Integer; stdcall;
-    function _Release: Integer; stdcall;
-  end;
-  {$ENDIF}
-
   IDebugInfoLineLogger = interface
     ['{1EA6E06A-0491-4BCF-BFA5-508BC88912BD}']
     procedure Warning(const Msg: string); overload;
@@ -214,6 +204,41 @@ begin
   Warning(Format(Fmt, Args));
 end;
 
+
+{$if (CompilerVersion < 35.0)}
+// -----------------------------------------------------------------------------
+//
+//      TNoRefCountObject
+//
+// -----------------------------------------------------------------------------
+// Introduced in the RTL in Delphi 11
+// -----------------------------------------------------------------------------
+type
+  TNoRefCountObject = class(TObject, IInterface)
+  protected
+    function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
+  end;
+
+function TNoRefCountObject.QueryInterface(const IID: TGUID; out Obj): HResult;
+begin
+  if GetInterface(IID, Obj) then
+    Result := S_OK
+  else
+    Result := E_NOINTERFACE;
+end;
+
+function TNoRefCountObject._AddRef: Integer;
+begin
+  Result := -1;
+end;
+
+function TNoRefCountObject._Release: Integer;
+begin
+  Result := -1;
+end;
+{$ifend}
 
 // -----------------------------------------------------------------------------
 //
@@ -1059,28 +1084,6 @@ begin
   if (SkipMarker) then
     Inc(Result, Length(Marker));
 end;
-
-{$IF CompilerVersion < 35.0)}
-{ TNoRefCountObject }
-
-function TNoRefCountObject.QueryInterface(const IID: TGUID; out Obj): HResult;
-begin
-  if GetInterface(IID, Obj) then
-    Result := S_OK
-  else
-    Result := E_NOINTERFACE;
-end;
-
-function TNoRefCountObject._AddRef: Integer;
-begin
-  Result := -1;
-end;
-
-function TNoRefCountObject._Release: Integer;
-begin
-  Result := -1;
-end;
-{$ENDIF}
 
 end.
 
