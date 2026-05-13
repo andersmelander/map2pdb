@@ -48,10 +48,18 @@ type
   // in order to avoid writing junk to the pdb file.
   TSafeMemoryStream = class(TMemoryStream)
   protected
+{$if (CompilerVersion < 35.0)}
+    function Realloc(var NewCapacity: LongInt): Pointer; override;
+{$else}
     function Realloc(var NewCapacity: NativeInt): Pointer; override;
+{$ifend}
   end;
 
+{$if (CompilerVersion < 35.0)}
+function TSafeMemoryStream.Realloc(var NewCapacity: LongInt): Pointer;
+{$else}
 function TSafeMemoryStream.Realloc(var NewCapacity: NativeInt): Pointer;
+{$ifend}
 begin
   Result := inherited Realloc(NewCapacity);
 
